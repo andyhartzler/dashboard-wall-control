@@ -1,20 +1,26 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import type { WidgetPlacement } from "@/lib/widget-meta";
 
 interface WSMessage {
   topic: string;
   data: unknown;
 }
 
-interface UseDashboardWSReturn {
+export interface UseDashboardWSReturn {
   data: Record<string, unknown>;
   connected: boolean;
+  layout: WidgetPlacement[];
+  activePreset: string;
+  send: (msg: Record<string, unknown>) => void;
 }
 
 export function useDashboardWS(backendUrl: string): UseDashboardWSReturn {
   const [data, setData] = useState<Record<string, unknown>>({});
   const [connected, setConnected] = useState(false);
+  const [layout, setLayout] = useState<WidgetPlacement[]>([]);
+  const [activePreset, setActivePreset] = useState("default");
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectDelay = useRef(1000);
@@ -22,7 +28,6 @@ export function useDashboardWS(backendUrl: string): UseDashboardWSReturn {
   const connect = useCallback(() => {
     if (!backendUrl) return;
 
-    // Build WebSocket URL from backend URL
     const wsUrl = backendUrl
       .replace(/^http/, "ws")
       .replace(/\/+$/, "") + "/ws";
@@ -39,7 +44,11 @@ export function useDashboardWS(backendUrl: string): UseDashboardWSReturn {
       ws.onmessage = (event) => {
         try {
           const msg: WSMessage = JSON.parse(event.data);
-          if (msg.topic && msg.data !== undefined) {
+          if (msg.topic === "layout_update") {
+            const d = msg.data as { preset: string; widgets: WidgetPlacement[] };
+            setLayout(d.widgets);
+            setActivePreset(d.preset);
+          } else if (msg.topic && msg.data !== undefined) {
             setData((prev) => ({ ...prev, [msg.topic]: msg.data }));
           }
         } catch {
@@ -50,7 +59,6 @@ export function useDashboardWS(backendUrl: string): UseDashboardWSReturn {
       ws.onclose = () => {
         setConnected(false);
         wsRef.current = null;
-        // Auto-reconnect with exponential backoff
         reconnectTimer.current = setTimeout(() => {
           reconnectDelay.current = Math.min(reconnectDelay.current * 1.5, 30000);
           connect();
@@ -78,5 +86,11 @@ export function useDashboardWS(backendUrl: string): UseDashboardWSReturn {
     };
   }, [connect]);
 
-  return { data, connected };
+  const send = useCallback((msg: Record<string, unknown>) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(msg));
+    }
+  }, []);
+
+  return { data, connected, layout, activePreset, send };
 }
