@@ -1,14 +1,13 @@
 "use client";
 
-import { useRef, useState, useEffect, useMemo } from "react";
+import { useRef, useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useDashboard } from "@/components/DashboardProvider";
 import { WidgetFrame } from "@/components/WidgetFrame";
 import { WIDGET_REGISTRY } from "@/widgets";
-import { registerWidget } from "@/widgets/registry";
 import type { WidgetPlacement } from "@/lib/widget-meta";
 
-// Dynamically import Leaflet + HLS widgets (they access window/document)
+// Dynamically import MapKit + HLS widgets (they access window/document)
 const DynamicAirTraffic = dynamic(() => import("@/widgets/AirTrafficWidget").then(() => {
   const entry = WIDGET_REGISTRY["air_traffic"];
   return { default: entry?.component || (() => null) };
@@ -38,9 +37,6 @@ const DYNAMIC_WIDGETS: Record<string, typeof DynamicAirTraffic> = {
 };
 
 // Topic → widget ID mapping for data lookup
-const TOPIC_MAP: Record<string, string> = {};
-
-// Build topic map from registry entries
 function getTopicForWidget(widgetId: string): string {
   // Check registry first
   const entry = WIDGET_REGISTRY[widgetId];
@@ -77,7 +73,7 @@ export function TVMirror() {
     return (
       <div className="tv-mirror-container">
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 8 }}>
-          <span style={{ fontSize: 28, opacity: 0.3 }}>📺</span>
+          <span style={{ fontSize: 28, opacity: 0.3 }}>TV</span>
           <span style={{ fontSize: 11, color: "var(--color-t-muted)", fontWeight: 500 }}>Connecting to TV...</span>
         </div>
       </div>
@@ -126,7 +122,7 @@ export function TVMirror() {
               width={placement.width}
               height={placement.height}
             >
-              <Component data={widgetData} />
+              <Component data={widgetData} width={placement.width} height={placement.height} />
             </WidgetFrame>
           );
         })}

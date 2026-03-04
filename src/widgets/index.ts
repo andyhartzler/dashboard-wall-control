@@ -3,6 +3,7 @@
 // Import all pure React widgets (side-effect: registers in WIDGET_REGISTRY)
 import "./ClockWidget";
 import "./WeatherWidget";
+import "./WeatherIcons";
 import "./StocksWidget";
 import "./CryptoWidget";
 import "./NewsWidget";
@@ -19,7 +20,7 @@ import "./ConflictWidget";
 import "./DisasterWidget";
 import "./SmartHomeWidget";
 
-// Leaflet + HLS widgets are loaded dynamically in TVMirror.tsx
+// MapKit + HLS widgets are loaded dynamically in TVMirror.tsx
 // (they access window/document which breaks SSR)
 
 export { WIDGET_REGISTRY } from "./registry";

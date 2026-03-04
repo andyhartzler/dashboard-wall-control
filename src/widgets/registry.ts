@@ -2,10 +2,16 @@
 
 import type { ComponentType } from "react";
 
+export interface WidgetProps {
+  data: Record<string, unknown>;
+  width?: number;
+  height?: number;
+}
+
 export interface WidgetRegistryEntry {
   title: string;
   topic: string;
-  component: ComponentType<{ data: Record<string, unknown> }>;
+  component: ComponentType<WidgetProps>;
   defaultSize: { width: number; height: number };
 }
 
