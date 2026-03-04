@@ -57,30 +57,25 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setMounted(true);
 
-    // Try stored URL first, then ngrok, then local
+    // Race ngrok and local in parallel — use whichever responds first
     async function autoConnect() {
-      const stored = localStorage.getItem("dashboard-backend-url");
+      const candidates = [NGROK_URL, LOCAL_URL];
 
-      // Try stored URL
-      if (stored) {
-        if (await tryConnect(stored)) {
-          setBackendUrl(stored);
+      // Try all candidates in parallel, use first success
+      const results = await Promise.allSettled(
+        candidates.map(async (url) => {
+          const ok = await tryConnect(url);
+          if (!ok) throw new Error("failed");
+          return url;
+        })
+      );
+
+      for (const result of results) {
+        if (result.status === "fulfilled") {
+          localStorage.setItem("dashboard-backend-url", result.value);
+          setBackendUrl(result.value);
           return;
         }
-      }
-
-      // Try ngrok (works from anywhere)
-      if (await tryConnect(NGROK_URL)) {
-        localStorage.setItem("dashboard-backend-url", NGROK_URL);
-        setBackendUrl(NGROK_URL);
-        return;
-      }
-
-      // Try local (home network only)
-      if (await tryConnect(LOCAL_URL)) {
-        localStorage.setItem("dashboard-backend-url", LOCAL_URL);
-        setBackendUrl(LOCAL_URL);
-        return;
       }
 
       // Fallback to ngrok anyway — WebSocket will retry
