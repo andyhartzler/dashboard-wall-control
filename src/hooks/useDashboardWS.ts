@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { WidgetPlacement } from "@/lib/widget-meta";
+import { setMapKitToken } from "@/lib/mapkit-token";
 
 interface WSMessage {
   topic: string;
@@ -53,6 +54,9 @@ export function useDashboardWS(backendUrl: string, password?: string): UseDashbo
             const d = msg.data as { preset: string; widgets: WidgetPlacement[] };
             setLayout(d.widgets);
             setActivePreset(d.preset);
+          } else if (msg.topic === "config") {
+            const d = msg.data as { mapkit_token?: string };
+            if (d.mapkit_token) setMapKitToken(d.mapkit_token);
           } else if (msg.topic && msg.data !== undefined) {
             setData((prev) => ({ ...prev, [msg.topic]: msg.data }));
           }

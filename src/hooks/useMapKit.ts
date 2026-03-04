@@ -30,8 +30,9 @@ async function initMapKit(backendUrl: string, password: string): Promise<void> {
 
   _initPromise = (async () => {
     await loadScript();
+    const mk = (window as any).mapkit;
     await new Promise<void>((resolve) => {
-      (window as any).mapkit.init({
+      mk.init({
         authorizationCallback: async (done: (token: string) => void) => {
           try {
             const token = await fetchMapKitToken(backendUrl, password);
@@ -43,6 +44,10 @@ async function initMapKit(backendUrl: string, password: string): Promise<void> {
       });
       setTimeout(resolve, 100);
     });
+    // Load the map library (required for MapKit JS 5.x modular loading)
+    if (typeof mk.importLibrary === 'function') {
+      await mk.importLibrary('map');
+    }
     _initialized = true;
   })();
 
