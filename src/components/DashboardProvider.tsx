@@ -3,8 +3,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useDashboardWS } from "@/hooks/useDashboardWS";
 import { SetupModal } from "@/components/SetupModal";
-import { Sidebar } from "@/components/Sidebar";
-import { ConnectionBanner } from "@/components/ConnectionBanner";
+import { BottomNav } from "@/components/BottomNav";
 
 interface DashboardContextType {
   data: Record<string, unknown>;
@@ -49,7 +48,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const { data, connected } = useDashboardWS(backendUrl);
 
   if (!mounted) {
-    return <div className="min-h-screen bg-bg-primary" />;
+    return <div style={{ minHeight: "100dvh", background: "#0c0c0e" }} />;
   }
 
   return (
@@ -62,17 +61,8 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
           onClose={backendUrl ? () => setShowSetup(false) : undefined}
         />
       )}
-      <div className="flex min-h-screen">
-        <Sidebar onOpenSetup={() => setShowSetup(true)} />
-        <main className="flex-1 ml-[240px]">
-          <ConnectionBanner
-            connected={connected}
-            url={backendUrl}
-            onConfigure={() => setShowSetup(true)}
-          />
-          <div className="p-6">{children}</div>
-        </main>
-      </div>
+      <main>{children}</main>
+      {!showSetup && <BottomNav />}
     </DashboardContext.Provider>
   );
 }

@@ -1,12 +1,12 @@
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { DashboardProvider } from "@/components/DashboardProvider";
 
-const inter = Inter({ subsets: ["latin"] });
-
 export const metadata = {
-  title: "Dashboard Wall Control",
-  description: "Remote control panel for Dashboard Wall",
+  title: "Dashboard",
+  description: "Dashboard Wall Remote",
+  viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
+  themeColor: "#0c0c0e",
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent" },
 };
 
 export default function RootLayout({
@@ -15,8 +15,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className={inter.className}>
+    <html lang="en">
+      <body>
         <DashboardProvider>{children}</DashboardProvider>
       </body>
     </html>

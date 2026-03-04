@@ -1,278 +1,108 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
 import { useDashboard } from "@/components/DashboardProvider";
-import {
-  CheckCircle2,
-  XCircle,
-  RefreshCw,
-  Clock,
-  Cpu,
-  HardDrive,
-  MemoryStick,
-  Thermometer,
-  Wifi,
-  WifiOff,
-} from "lucide-react";
-
-interface DataSource {
-  id: string;
-  name?: string;
-  enabled?: boolean;
-  interval?: number;
-  last_update?: string;
-  status?: string;
-  error?: string;
-}
 
 export default function StatusPage() {
-  const { connected, url, data } = useDashboard();
-  const [dataSources, setDataSources] = useState<DataSource[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [lastFetch, setLastFetch] = useState<Date | null>(null);
-
+  const { connected, data } = useDashboard();
   const systemHealth = data.system_health as Record<string, unknown> | undefined;
-
-  const fetchSources = useCallback(async () => {
-    if (!url) return;
-    setLoading(true);
-    try {
-      const res = await fetch(`${url}/api/widgets`);
-      if (res.ok) {
-        const result = await res.json();
-        const sources: DataSource[] = Array.isArray(result)
-          ? result
-          : Object.entries(result).map(([id, cfg]) => ({
-              id,
-              ...(typeof cfg === "object" && cfg !== null ? cfg : {}),
-            } as DataSource));
-        setDataSources(sources);
-        setLastFetch(new Date());
-      }
-    } catch {
-      // Connection error
-    }
-    setLoading(false);
-  }, [url]);
-
-  useEffect(() => {
-    fetchSources();
-  }, [fetchSources]);
-
-  const activeSources = dataSources.filter((s) => s.enabled !== false);
-  const errorSources = dataSources.filter(
-    (s) => s.status === "error" || s.error
-  );
+  const topicCount = Object.keys(data).length;
 
   return (
-    <div className="max-w-4xl space-y-8">
-      <div>
-        <h2 className="text-lg font-semibold text-text-primary">Status</h2>
-        <p className="text-sm text-text-muted mt-1">
-          System health and data source status
-        </p>
-      </div>
+    <div className="page-content">
+      <h1 className="text-[20px] font-600 text-t-primary mb-6 animate-in">Status</h1>
 
-      {/* Connection Status */}
-      <section className="glass-panel relative p-6 space-y-4">
-        <h3 className="text-sm font-medium text-text-primary">Connection</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="flex items-center gap-3 py-3 px-4 rounded-xl bg-white/[0.02] border border-border-glass">
-            {connected ? (
-              <Wifi className="w-5 h-5 text-accent-green" />
-            ) : (
-              <WifiOff className="w-5 h-5 text-accent-red" />
-            )}
-            <div>
-              <div className="text-xs text-text-muted">WebSocket</div>
-              <div
-                className={`text-sm font-medium ${
-                  connected ? "text-accent-green" : "text-accent-red"
-                }`}
-              >
-                {connected ? "Connected" : "Disconnected"}
-              </div>
-            </div>
+      {/* Connection */}
+      <section className="mb-6 animate-in stagger-1">
+        <div className="card flex items-center gap-4">
+          <div
+            className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{
+              background: connected ? "var(--color-green-dim)" : "var(--color-red-dim)",
+            }}
+          >
+            <span
+              className="w-3 h-3 rounded-full"
+              style={{ background: connected ? "var(--color-green)" : "var(--color-red)" }}
+            />
           </div>
-
-          <div className="flex items-center gap-3 py-3 px-4 rounded-xl bg-white/[0.02] border border-border-glass">
-            <Clock className="w-5 h-5 text-accent-cyan" />
-            <div>
-              <div className="text-xs text-text-muted">Live Topics</div>
-              <div className="text-sm font-medium text-text-primary">
-                {Object.keys(data).length}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 py-3 px-4 rounded-xl bg-white/[0.02] border border-border-glass">
-            <Clock className="w-5 h-5 text-accent-purple" />
-            <div>
-              <div className="text-xs text-text-muted">Backend URL</div>
-              <div className="text-xs font-mono text-text-secondary truncate max-w-[180px]">
-                {url || "Not set"}
-              </div>
-            </div>
+          <div>
+            <p className="text-[15px] font-500 text-t-primary">
+              {connected ? "Connected" : "Disconnected"}
+            </p>
+            <p className="text-[12px] text-t-muted mt-0.5">
+              {connected
+                ? `Receiving ${topicCount} topic${topicCount !== 1 ? "s" : ""} via WebSocket`
+                : "Attempting to reconnect..."}
+            </p>
           </div>
         </div>
       </section>
 
       {/* System Health */}
       {systemHealth && (
-        <section className="glass-panel relative p-6 space-y-4">
-          <h3 className="text-sm font-medium text-text-primary">
-            System Health (Pi)
-          </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <section className="mb-6 animate-in stagger-2">
+          <h2 className="text-[13px] font-600 text-t-secondary uppercase tracking-wider mb-3">Raspberry Pi</h2>
+          <div className="grid grid-cols-2 gap-3">
             {systemHealth.cpu_percent !== undefined && (
-              <HealthGauge
-                icon={Cpu}
+              <MetricCard
                 label="CPU"
-                value={systemHealth.cpu_percent as number}
-                unit="%"
-                color="accent-blue"
+                value={`${Number(systemHealth.cpu_percent).toFixed(0)}%`}
+                color="var(--color-blue)"
+                pct={Number(systemHealth.cpu_percent)}
               />
             )}
             {systemHealth.memory_percent !== undefined && (
-              <HealthGauge
-                icon={MemoryStick}
+              <MetricCard
                 label="Memory"
-                value={systemHealth.memory_percent as number}
-                unit="%"
-                color="accent-purple"
-              />
-            )}
-            {systemHealth.disk_percent !== undefined && (
-              <HealthGauge
-                icon={HardDrive}
-                label="Disk"
-                value={systemHealth.disk_percent as number}
-                unit="%"
-                color="accent-amber"
+                value={`${Number(systemHealth.memory_percent).toFixed(0)}%`}
+                color="var(--color-purple)"
+                pct={Number(systemHealth.memory_percent)}
               />
             )}
             {systemHealth.temperature !== undefined && (
-              <HealthGauge
-                icon={Thermometer}
+              <MetricCard
                 label="Temp"
-                value={systemHealth.temperature as number}
-                unit="C"
-                color="accent-red"
+                value={`${Number(systemHealth.temperature).toFixed(0)}°C`}
+                color={Number(systemHealth.temperature) > 70 ? "var(--color-red)" : "var(--color-amber)"}
+                pct={Math.min(Number(systemHealth.temperature), 100)}
+              />
+            )}
+            {systemHealth.disk_percent !== undefined && (
+              <MetricCard
+                label="Disk"
+                value={`${Number(systemHealth.disk_percent).toFixed(0)}%`}
+                color="var(--color-cyan)"
+                pct={Number(systemHealth.disk_percent)}
               />
             )}
           </div>
         </section>
       )}
 
-      {/* Data Sources */}
-      <section className="glass-panel relative p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-medium text-text-primary">
-              Data Sources
-            </h3>
-            <p className="text-xs text-text-muted mt-0.5">
-              {activeSources.length} active
-              {errorSources.length > 0 &&
-                `, ${errorSources.length} with errors`}
-              {lastFetch && ` - fetched ${lastFetch.toLocaleTimeString()}`}
-            </p>
-          </div>
-          <button
-            onClick={fetchSources}
-            disabled={loading}
-            className="glass-btn text-xs flex items-center gap-1.5"
-          >
-            <RefreshCw
-              className={`w-3 h-3 ${loading ? "animate-spin" : ""}`}
-            />
-            Refresh
-          </button>
-        </div>
-
-        {dataSources.length === 0 ? (
-          <p className="text-xs text-text-muted">
-            {url
-              ? "No data sources found. Make sure the backend is running."
-              : "Connect to backend to view data sources."}
-          </p>
-        ) : (
-          <div className="space-y-2">
-            {dataSources.map((source) => {
-              const hasData = data[source.id] !== undefined;
-              const hasError = source.status === "error" || !!source.error;
-              return (
-                <div
-                  key={source.id}
-                  className="flex items-center justify-between py-2.5 px-4 rounded-lg bg-white/[0.02] border border-border-glass"
-                >
-                  <div className="flex items-center gap-3">
-                    {hasError ? (
-                      <XCircle className="w-4 h-4 text-accent-red" />
-                    ) : hasData ? (
-                      <CheckCircle2 className="w-4 h-4 text-accent-green" />
-                    ) : (
-                      <Clock className="w-4 h-4 text-text-muted" />
-                    )}
-                    <div>
-                      <span className="text-xs font-medium text-text-secondary">
-                        {(source.name || source.id).replace(/_/g, " ")}
-                      </span>
-                      {source.error && (
-                        <p className="text-xs text-accent-red/70 mt-0.5">
-                          {source.error}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {source.interval && (
-                      <span className="text-xs text-text-muted">
-                        {source.interval}s
-                      </span>
-                    )}
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded-full ${
-                        source.enabled === false
-                          ? "bg-white/[0.05] text-text-muted"
-                          : hasData
-                          ? "bg-accent-green/10 text-accent-green"
-                          : "bg-accent-amber/10 text-accent-amber"
-                      }`}
-                    >
-                      {source.enabled === false
-                        ? "disabled"
-                        : hasData
-                        ? "live"
-                        : "waiting"}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
-      {/* Active Topics (from WS) */}
-      <section className="glass-panel relative p-6 space-y-4">
-        <h3 className="text-sm font-medium text-text-primary">
-          Active Topics (WebSocket)
-        </h3>
-        <div className="flex flex-wrap gap-2">
-          {Object.keys(data).length === 0 ? (
-            <p className="text-xs text-text-muted">No topics received yet</p>
+      {/* Active Topics */}
+      <section className="animate-in stagger-3">
+        <h2 className="text-[13px] font-600 text-t-secondary uppercase tracking-wider mb-3">
+          Active Topics
+        </h2>
+        <div className="card !p-3">
+          {topicCount === 0 ? (
+            <p className="text-[13px] text-t-muted p-1">No topics received</p>
           ) : (
-            Object.keys(data)
-              .sort()
-              .map((topic) => (
+            <div className="flex flex-wrap gap-2">
+              {Object.keys(data).sort().map((topic) => (
                 <span
                   key={topic}
-                  className="text-xs px-2.5 py-1 rounded-lg bg-accent-blue/10 text-accent-blue border border-accent-blue/15"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-500"
+                  style={{
+                    background: "var(--color-surface-2)",
+                    color: "var(--color-t-secondary)",
+                  }}
                 >
-                  {topic}
+                  <span className="w-1.5 h-1.5 rounded-full live-dot" />
+                  {topic.replace(/_/g, " ")}
                 </span>
-              ))
+              ))}
+            </div>
           )}
         </div>
       </section>
@@ -280,38 +110,22 @@ export default function StatusPage() {
   );
 }
 
-function HealthGauge({
-  icon: Icon,
-  label,
-  value,
-  unit,
-  color,
-}: {
-  icon: React.ElementType;
+function MetricCard({ label, value, color, pct }: {
   label: string;
-  value: number;
-  unit: string;
+  value: string;
   color: string;
+  pct: number;
 }) {
-  const pct = unit === "%" ? value : Math.min((value / 100) * 100, 100);
-  const isHigh = pct > 80;
-
   return (
-    <div className="py-3 px-4 rounded-xl bg-white/[0.02] border border-border-glass space-y-2">
-      <div className="flex items-center gap-2">
-        <Icon className={`w-4 h-4 text-${color}`} />
-        <span className="text-xs text-text-muted">{label}</span>
-      </div>
-      <div className={`text-lg font-light ${isHigh ? "text-accent-red" : "text-text-primary"}`}>
-        {typeof value === "number" ? value.toFixed(1) : value}
-        <span className="text-xs text-text-muted ml-0.5">{unit === "%" ? "%" : "\u00B0" + unit}</span>
-      </div>
-      <div className="w-full h-1 rounded-full bg-white/[0.05]">
+    <div className="card">
+      <p className="text-[11px] text-t-muted font-500 uppercase tracking-wider mb-2">{label}</p>
+      <p className="text-[22px] font-300 text-t-primary leading-none mb-3" style={{ fontVariantNumeric: "tabular-nums" }}>
+        {value}
+      </p>
+      <div className="w-full h-1 rounded-full" style={{ background: "var(--color-surface-3)" }}>
         <div
-          className={`h-full rounded-full transition-all ${
-            isHigh ? "bg-accent-red" : `bg-${color}`
-          }`}
-          style={{ width: `${Math.min(pct, 100)}%` }}
+          className="h-full rounded-full transition-all duration-500"
+          style={{ width: `${Math.min(pct, 100)}%`, background: color }}
         />
       </div>
     </div>
