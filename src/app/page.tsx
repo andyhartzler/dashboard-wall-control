@@ -1,16 +1,15 @@
 "use client";
 
 import { useState } from "react";
+
 import { useDashboard } from "@/components/DashboardProvider";
 import { TVMirror } from "@/components/TVMirror";
 import { GridEditor } from "@/components/GridEditor";
 import { PresetSelector } from "@/components/PresetSelector";
-import { SetupModal } from "@/components/SetupModal";
 
 export default function DashboardPage() {
-  const { connected, layout, url, setUrl } = useDashboard();
+  const { connected, layout, url } = useDashboard();
   const [isEditing, setIsEditing] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
 
   return (
     <div className="page-shell">
@@ -56,39 +55,6 @@ export default function DashboardPage() {
             </span>
           </div>
         </div>
-        <button
-          onClick={() => setShowSettings(true)}
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 10,
-            border: "1px solid var(--color-glass-border)",
-            background: "var(--color-surface-0)",
-            color: "var(--color-t-muted)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            fontSize: 14,
-            padding: 0,
-            fontFamily: "inherit",
-          }}
-          aria-label="Settings"
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-          </svg>
-        </button>
       </div>
 
       {/* Widget count + preset */}
@@ -172,28 +138,11 @@ export default function DashboardPage() {
           }}
         >
           <p style={{ fontSize: 12, color: "var(--color-accent-red)", fontWeight: 500 }}>
-            Not connected to dashboard
+            Connecting to dashboard...
           </p>
           <p style={{ fontSize: 11, color: "var(--color-t-muted)", marginTop: 4 }}>
-            Make sure you&apos;re on the same network as the Pi
+            Trying to reach the Pi — will auto-retry
           </p>
-          <button
-            onClick={() => setShowSettings(true)}
-            style={{
-              marginTop: 10,
-              padding: "8px 20px",
-              borderRadius: 10,
-              border: "1px solid var(--color-glass-border)",
-              background: "var(--color-surface-0)",
-              color: "var(--color-t-primary)",
-              fontSize: 12,
-              fontWeight: 500,
-              fontFamily: "inherit",
-              cursor: "pointer",
-            }}
-          >
-            Change Connection
-          </button>
         </div>
       )}
 
@@ -232,16 +181,6 @@ export default function DashboardPage() {
         )}
       </button>
 
-      {/* Settings modal */}
-      {showSettings && (
-        <SetupModal
-          onSave={(newUrl) => {
-            setUrl(newUrl);
-            setShowSettings(false);
-          }}
-          onClose={() => setShowSettings(false)}
-        />
-      )}
     </div>
   );
 }

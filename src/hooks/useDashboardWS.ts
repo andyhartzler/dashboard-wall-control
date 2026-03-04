@@ -16,7 +16,7 @@ export interface UseDashboardWSReturn {
   send: (msg: Record<string, unknown>) => void;
 }
 
-export function useDashboardWS(backendUrl: string): UseDashboardWSReturn {
+export function useDashboardWS(backendUrl: string, password?: string): UseDashboardWSReturn {
   const [data, setData] = useState<Record<string, unknown>>({});
   const [connected, setConnected] = useState(false);
   const [layout, setLayout] = useState<WidgetPlacement[]>([]);
@@ -28,9 +28,14 @@ export function useDashboardWS(backendUrl: string): UseDashboardWSReturn {
   const connect = useCallback(() => {
     if (!backendUrl) return;
 
-    const wsUrl = backendUrl
+    let wsUrl = backendUrl
       .replace(/^http/, "ws")
       .replace(/\/+$/, "") + "/ws";
+
+    // Add password for authenticated connections
+    if (password) {
+      wsUrl += `?password=${encodeURIComponent(password)}`;
+    }
 
     try {
       const ws = new WebSocket(wsUrl);
@@ -71,7 +76,7 @@ export function useDashboardWS(backendUrl: string): UseDashboardWSReturn {
     } catch {
       setConnected(false);
     }
-  }, [backendUrl]);
+  }, [backendUrl, password]);
 
   useEffect(() => {
     connect();

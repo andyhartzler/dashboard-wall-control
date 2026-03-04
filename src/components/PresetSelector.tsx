@@ -10,32 +10,37 @@ interface PresetInfo {
 }
 
 export function PresetSelector() {
-  const { url, activePreset, switchPreset } = useDashboard();
+  const { url, password, activePreset, switchPreset } = useDashboard();
   const [presets, setPresets] = useState<PresetInfo[]>([]);
   const [showNew, setShowNew] = useState(false);
   const [newName, setNewName] = useState("");
 
+  const authHeaders: HeadersInit = {
+    "Content-Type": "application/json",
+    "x-dashboard-password": password,
+    "ngrok-skip-browser-warning": "1",
+  };
+
   useEffect(() => {
     if (!url) return;
-    fetch(`${url}/api/layout/presets`)
+    fetch(`${url}/api/layout/presets`, { headers: authHeaders })
       .then((r) => r.json())
       .then((d) => setPresets(d.presets || []))
       .catch(() => {});
-  }, [url, activePreset]);
+  }, [url, activePreset]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
     const key = newName.trim().toLowerCase().replace(/\s+/g, "_");
     await fetch(`${url}/api/layout/${key}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders,
       body: JSON.stringify({ name: newName.trim(), widgets: [] }),
     });
     await switchPreset(key);
     setShowNew(false);
     setNewName("");
-    // Refresh presets list
-    const r = await fetch(`${url}/api/layout/presets`);
+    const r = await fetch(`${url}/api/layout/presets`, { headers: authHeaders });
     const d = await r.json();
     setPresets(d.presets || []);
   };
