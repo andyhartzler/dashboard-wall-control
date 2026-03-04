@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useDashboard } from "@/components/DashboardProvider";
 import { fetchMapKitToken } from "@/lib/mapkit-token";
 
-const MAPKIT_CDN = "https://cdn.apple-mapkit.com/mk/5.x.x/mapkit.core.js";
+const MAPKIT_CDN = "https://cdn.apple-mapkit.com/mk/5.x.x/mapkit.js";
 
 let _initPromise: Promise<void> | null = null;
 let _initialized = false;
