@@ -11,25 +11,29 @@ export async function fetchMapKitToken(
   backendUrl: string,
   password: string
 ): Promise<string> {
-  const now = Date.now();
-  if (_tokenCache && _tokenCache.expires > now) {
-    return _tokenCache.token;
+  // Poll cache for up to 15s waiting for WebSocket to deliver the token
+  for (let attempt = 0; attempt < 15; attempt++) {
+    if (_tokenCache && _tokenCache.expires > Date.now()) {
+      return _tokenCache.token;
+    }
+    if (attempt > 0) {
+      await new Promise((r) => setTimeout(r, 1000));
+    }
   }
 
-  // Try HTTP fetch as fallback (may fail due to CORS with ngrok)
+  // Last resort: try HTTP fetch (may fail due to CORS with ngrok)
   try {
     const resp = await fetch(
       `${backendUrl}/api/apple/mapkit-token?password=${encodeURIComponent(password)}`,
-      { headers: { "ngrok-skip-browser-warning": "1" } }
     );
     if (resp.ok) {
       const data = await resp.json();
-      _tokenCache = { token: data.token, expires: now + 23 * 3600 * 1000 };
+      _tokenCache = { token: data.token, expires: Date.now() + 23 * 3600 * 1000 };
       return data.token;
     }
   } catch {
-    // CORS or network error — wait for WebSocket to provide token
+    // CORS or network error
   }
 
-  throw new Error("MapKit token not available yet");
+  throw new Error("MapKit token not available");
 }

@@ -31,22 +31,26 @@ async function initMapKit(backendUrl: string, password: string): Promise<void> {
   _initPromise = (async () => {
     await loadScript();
     const mk = (window as any).mapkit;
-    await new Promise<void>((resolve) => {
+
+    // Wait for auth to complete before proceeding
+    await new Promise<void>((resolve, reject) => {
       mk.init({
         authorizationCallback: async (done: (token: string) => void) => {
           try {
             const token = await fetchMapKitToken(backendUrl, password);
             done(token);
+            setTimeout(resolve, 200);
           } catch (e) {
             console.error("MapKit auth failed:", e);
+            reject(e);
           }
         },
       });
-      setTimeout(resolve, 100);
     });
+
     // Load the map library (required for MapKit JS 5.x modular loading)
-    if (typeof mk.importLibrary === 'function') {
-      await mk.importLibrary('map');
+    if (typeof mk.importLibrary === "function") {
+      await mk.importLibrary("map");
     }
     _initialized = true;
   })();
