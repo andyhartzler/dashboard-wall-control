@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Lock } from "lucide-react";
 
 interface SetupModalProps {
   onSave: (url: string) => void;
@@ -23,12 +24,10 @@ export function SetupModal({ onSave, onClose }: SetupModalProps) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0a0b10]">
-      <div className="w-full max-w-sm mx-4">
-        <h2 className="text-2xl font-semibold text-white text-center mb-8">
-          Dashboard Wall
-        </h2>
+      <div className="w-full max-w-xs mx-4 flex flex-col items-center gap-6">
+        <Lock className="w-8 h-8 text-white/30" />
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="w-full space-y-3">
           <input
             type="password"
             value={password}
@@ -37,16 +36,12 @@ export function SetupModal({ onSave, onClose }: SetupModalProps) {
               setError("");
             }}
             placeholder="Password"
-            className="glass-input w-full"
+            className="glass-input w-full text-center"
             autoFocus
           />
           {error && (
             <p className="text-xs text-accent-red text-center">{error}</p>
           )}
-
-          <button type="submit" className="glass-btn w-full py-2.5">
-            Enter
-          </button>
         </form>
       </div>
     </div>
