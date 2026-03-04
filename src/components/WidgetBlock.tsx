@@ -15,7 +15,7 @@ function formatDataSummary(widgetId: string, data?: Record<string, unknown>): st
 
   switch (widgetId) {
     case "clock":
-      return ""; // Clock is self-explanatory
+      return "";
     case "weather": {
       const temp = data.temp as number | undefined;
       const desc = data.description as string | undefined;
@@ -23,38 +23,44 @@ function formatDataSummary(widgetId: string, data?: Record<string, unknown>): st
       return null;
     }
     case "stocks": {
-      const items = data.items as Array<{ symbol: string; price: number; change_pct: number }> | undefined;
-      if (items?.length) {
-        return items.slice(0, 2).map((s) => `${s.symbol} ${s.change_pct >= 0 ? "+" : ""}${s.change_pct.toFixed(1)}%`).join("  ");
+      const quotes = data.quotes as Array<{ name: string; change_pct: number }> | undefined;
+      if (quotes?.length) {
+        return quotes.slice(0, 2).map((s) => `${s.name.split(" ")[0]} ${s.change_pct >= 0 ? "+" : ""}${s.change_pct.toFixed(1)}%`).join("  ");
       }
       return null;
     }
     case "crypto": {
-      const coins = data.items as Array<{ symbol: string; price: number; change_pct: number }> | undefined;
+      const coins = data.coins as Array<{ name: string; change_24h: number }> | undefined;
       if (coins?.length) {
-        return coins.slice(0, 2).map((c) => `${c.symbol} ${c.change_pct >= 0 ? "+" : ""}${c.change_pct.toFixed(1)}%`).join("  ");
+        return coins.slice(0, 2).map((c) => `${c.name.slice(0, 3)} ${c.change_24h >= 0 ? "+" : ""}${c.change_24h.toFixed(1)}%`).join("  ");
       }
       return null;
     }
     case "news_kc":
     case "news_world": {
-      const articles = data.items as Array<{ title: string }> | undefined;
+      const articles = data.articles as Array<{ title: string }> | undefined;
       if (articles?.length) return articles[0].title.slice(0, 50);
       return null;
     }
     case "earthquake": {
-      const quakes = data.items as Array<{ magnitude: number; location: string }> | undefined;
-      if (quakes?.length) return `M${quakes[0].magnitude} ${quakes[0].location?.slice(0, 25) || ""}`;
+      const quakes = data.quakes as Array<{ magnitude: number; place: string }> | undefined;
+      if (quakes?.length) return `M${quakes[0].magnitude} ${quakes[0].place?.slice(0, 25) || ""}`;
       return null;
     }
     case "sports": {
-      const games = data.items as Array<{ summary: string }> | undefined;
-      if (games?.length) return games[0].summary?.slice(0, 40) || null;
+      const scores = data.scores as Array<{ league: string; home_team: string; away_team: string }> | undefined;
+      if (scores?.length) return `${scores[0].league}: ${scores[0].away_team} @ ${scores[0].home_team}`.slice(0, 40);
       return null;
     }
-    case "calendar": {
-      const events = data.items as Array<{ title: string }> | undefined;
-      if (events?.length) return events[0].title?.slice(0, 35) || null;
+    case "prediction": {
+      const markets = data.markets as Array<{ title: string }> | undefined;
+      if (markets?.length) return markets[0].title?.slice(0, 40) || null;
+      return null;
+    }
+    case "moon": {
+      const phase = data.moon_phase as string | undefined;
+      const illum = data.moon_illumination as number | undefined;
+      if (phase) return `${phase}${illum !== undefined ? ` ${Math.round(illum * 100)}%` : ""}`;
       return null;
     }
     case "sun": {
