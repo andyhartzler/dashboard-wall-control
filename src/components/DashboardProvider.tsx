@@ -41,10 +41,10 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setMounted(true);
     const stored = localStorage.getItem("dashboard-backend-url");
-    if (stored) {
-      setBackendUrl(stored);
-    } else {
-      setShowSetup(true);
+    const url = stored || "http://192.168.4.31:3000";
+    setBackendUrl(url);
+    if (!stored) {
+      localStorage.setItem("dashboard-backend-url", url);
     }
   }, []);
 
