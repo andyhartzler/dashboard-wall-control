@@ -1,39 +1,32 @@
 "use client";
 
+import { useRef, useState, useEffect } from "react";
 import { useDashboard } from "@/components/DashboardProvider";
-import { WidgetBlock } from "@/components/WidgetBlock";
-import { WIDGET_META } from "@/lib/widget-meta";
 
-// Map widget IDs to their backend data topics
-const WIDGET_TOPICS: Record<string, string> = {
-  clock: "clock",
-  weather: "weather",
-  calendar: "calendar",
-  reminders: "reminders",
-  air_traffic: "air_traffic",
-  weather_radar: "weather_radar",
-  world_map: "world_map",
-  webcam: "webcams",
-  stocks: "stocks",
-  crypto: "crypto",
-  news_kc: "news_kc",
-  news_world: "news_world",
-  earthquake: "earthquakes",
-  sun: "sun",
-  moon: "moon",
-  sports: "sports",
-  prediction: "prediction_markets",
-  trending: "trending",
-  disaster: "disaster",
-  conflict: "conflict",
-  smart_home: "smart_home",
-  system_health: "system_health",
-};
+const TV_WIDTH = 1920;
+const TV_HEIGHT = 1080;
+const NGROK_URL = "https://expeditiously-unspeakable-aracelis.ngrok-free.dev";
 
 export function TVMirror() {
-  const { layout, data } = useDashboard();
+  const { connected, url } = useDashboard();
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(0);
 
-  if (layout.length === 0) {
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      const { width, height } = entries[0].contentRect;
+      setScale(Math.min(width / TV_WIDTH, height / TV_HEIGHT));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Always use HTTPS URL for iframe (control panel is HTTPS on Vercel)
+  const iframeUrl = url?.startsWith("https://") ? url : NGROK_URL;
+
+  if (!connected) {
     return (
       <div className="tv-mirror-container">
         <div
@@ -54,16 +47,7 @@ export function TVMirror() {
               fontWeight: 500,
             }}
           >
-            No widgets placed
-          </span>
-          <span
-            style={{
-              fontSize: 10,
-              color: "var(--color-t-muted)",
-              opacity: 0.6,
-            }}
-          >
-            Tap the edit button to add widgets
+            Connecting to TV...
           </span>
         </div>
       </div>
@@ -72,29 +56,31 @@ export function TVMirror() {
 
   return (
     <div className="tv-mirror-container">
-      <div className="tv-mirror-grid">
-        {layout.map((placement) => {
-          const topic = WIDGET_TOPICS[placement.widget];
-          const widgetData = topic ? (data[topic] as Record<string, unknown>) : undefined;
-          const meta = WIDGET_META[placement.widget];
-          if (!meta) return null;
-
-          return (
-            <div
-              key={placement.widget}
-              style={{
-                gridColumn: `${placement.col} / span ${placement.width}`,
-                gridRow: `${placement.row} / span ${placement.height}`,
-              }}
-            >
-              <WidgetBlock
-                widgetId={placement.widget}
-                data={widgetData}
-                compact={placement.width <= 2 && placement.height <= 1}
-              />
-            </div>
-          );
-        })}
+      <div
+        ref={wrapperRef}
+        style={{
+          width: "100%",
+          height: "100%",
+          overflow: "hidden",
+          position: "relative",
+          borderRadius: 6,
+        }}
+      >
+        {scale > 0 && (
+          <iframe
+            src={iframeUrl}
+            width={TV_WIDTH}
+            height={TV_HEIGHT}
+            style={{
+              border: "none",
+              transformOrigin: "0 0",
+              transform: `scale(${scale})`,
+              display: "block",
+            }}
+            title="TV Dashboard"
+            allow="autoplay"
+          />
+        )}
       </div>
     </div>
   );
