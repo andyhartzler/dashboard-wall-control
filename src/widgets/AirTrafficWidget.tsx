@@ -48,7 +48,7 @@ function AirTrafficWidget({ data }: { data: Record<string, unknown> }) {
   const annotationsRef = useRef<Map<string, any>>(new Map());
   const { map, ready } = useMapKit(containerRef, {
     center: KC_CENTER,
-    cameraDistance: 120000,
+    cameraDistance: 55000,
     colorScheme: "dark",
     mapType: "mutedStandard",
   });
