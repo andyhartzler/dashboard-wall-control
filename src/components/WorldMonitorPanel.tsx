@@ -101,18 +101,6 @@ const PRESETS: { id: string; label: string; layers: string }[] = [
   { id: "none", label: "None", layers: "none" },
 ];
 
-function buildPreviewUrl(config: WMConfig): string {
-  const params = new URLSearchParams({
-    view: config.view,
-    zoom: String(config.zoom),
-    lat: String(config.lat),
-    lon: String(config.lon),
-    layers: config.layers || "none",
-    timeRange: config.timeRange,
-  });
-  return `https://worldmonitor.app/?${params.toString()}`;
-}
-
 export function WorldMonitorPanel() {
   const { url, password } = useDashboard();
   const [config, setConfig] = useState<WMConfig>(DEFAULT_CONFIG);
@@ -185,64 +173,38 @@ export function WorldMonitorPanel() {
     );
   }
 
-  const previewUrl = buildPreviewUrl(config);
+  const activeLayerCount = activeLayers.size;
+  const regionLabel = REGIONS.find(r => r.id === config.view)?.label || config.view;
 
   return (
     <div className="animate-in" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {/* Preview iframe */}
+      {/* Config summary */}
       <div style={{
-        width: "100%",
-        aspectRatio: "16 / 9",
+        padding: "16px 18px",
         borderRadius: 12,
         border: "1px solid var(--color-glass-border)",
-        overflow: "hidden",
-        background: "#0a0f0a",
-        boxShadow: "0 8px 40px rgba(0, 0, 0, 0.5)",
-        position: "relative",
+        background: "var(--color-surface-0)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
       }}>
-        {previewUrl ? (
-          <iframe
-            src={previewUrl}
-            style={{
-              width: "100%",
-              height: "100%",
-              border: "none",
-              borderRadius: 11,
-            }}
-            title="World Monitor Preview"
-            allow="autoplay"
-            sandbox="allow-scripts allow-same-origin"
-          />
-        ) : (
-          <div style={{
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "var(--color-t-muted)",
-            fontSize: 12,
-          }}>
-            Connecting...
-          </div>
-        )}
-        <div style={{
-          position: "absolute",
-          top: 8,
-          left: 10,
-          zIndex: 10,
-          pointerEvents: "none",
-        }}>
-          <span className="glass-badge" style={{
-            fontSize: 9,
-            fontWeight: 600,
-            letterSpacing: "0.06em",
-            textTransform: "uppercase",
-            color: "var(--color-accent-green)",
-          }}>
-            LIVE PREVIEW
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: "var(--color-t-primary)" }}>
+            {regionLabel} View
+          </span>
+          <span style={{ fontSize: 11, color: "var(--color-t-muted)" }}>
+            {activeLayerCount} layer{activeLayerCount !== 1 ? "s" : ""} active &middot; {config.timeRange} window
           </span>
         </div>
+        <span className="glass-badge" style={{
+          fontSize: 9,
+          fontWeight: 600,
+          letterSpacing: "0.06em",
+          textTransform: "uppercase",
+          color: "var(--color-accent-green)",
+        }}>
+          ON TV
+        </span>
       </div>
 
       {/* Region selector */}
