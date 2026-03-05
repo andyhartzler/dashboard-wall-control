@@ -17,7 +17,7 @@ const DEFAULT_CONFIG: WMConfig = {
   zoom: 2.5,
   lat: 20,
   lon: 0,
-  layers: "conflicts,bases,hotspots,flights,cables,nuclear",
+  layers: "conflicts,hotspots,protests,ucdpEvents,displacement,bases,nuclear,flights,military,gpsJamming,datacenters,spaceports,minerals,ais,waterways,weather,fires,natural,climate,economic,sanctions,outages,cyberThreats",
   timeRange: "24h",
 };
 
