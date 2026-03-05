@@ -101,7 +101,7 @@ const PRESETS: { id: string; label: string; layers: string }[] = [
   { id: "none", label: "None", layers: "none" },
 ];
 
-function buildPreviewUrl(backendUrl: string, config: WMConfig): string {
+function buildPreviewUrl(config: WMConfig): string {
   const params = new URLSearchParams({
     view: config.view,
     zoom: String(config.zoom),
@@ -110,7 +110,7 @@ function buildPreviewUrl(backendUrl: string, config: WMConfig): string {
     layers: config.layers || "none",
     timeRange: config.timeRange,
   });
-  return `${backendUrl}/worldmonitor/?${params.toString()}`;
+  return `https://worldmonitor.app/?${params.toString()}`;
 }
 
 export function WorldMonitorPanel() {
@@ -185,7 +185,7 @@ export function WorldMonitorPanel() {
     );
   }
 
-  const previewUrl = url ? buildPreviewUrl(url, config) : "";
+  const previewUrl = buildPreviewUrl(config);
 
   return (
     <div className="animate-in" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
