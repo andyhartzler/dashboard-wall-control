@@ -1,14 +1,90 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 import { useDashboard } from "@/components/DashboardProvider";
 import { TVMirror } from "@/components/TVMirror";
 import { GridEditor } from "@/components/GridEditor";
 import { PresetSelector } from "@/components/PresetSelector";
 
+function KioskModeSwitcher({ backendUrl, password }: { backendUrl: string; password: string }) {
+  const [mode, setMode] = useState<string>("dashboard");
+  const [loading, setLoading] = useState(false);
+
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    "x-dashboard-password": password,
+    "ngrok-skip-browser-warning": "1",
+  };
+
+  const fetchMode = useCallback(async () => {
+    if (!backendUrl) return;
+    try {
+      const resp = await fetch(`${backendUrl}/api/kiosk/mode`, { headers });
+      if (resp.ok) {
+        const data = await resp.json();
+        setMode(data.mode);
+      }
+    } catch {}
+  }, [backendUrl]);
+
+  useEffect(() => { fetchMode(); }, [fetchMode]);
+
+  const switchMode = async (newMode: string) => {
+    if (!backendUrl || loading) return;
+    setLoading(true);
+    try {
+      await fetch(`${backendUrl}/api/kiosk/mode`, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify({ mode: newMode }),
+      });
+      setMode(newMode);
+    } catch {}
+    setLoading(false);
+  };
+
+  return (
+    <div style={{
+      display: "flex", gap: 6, padding: "0 0 12px",
+    }}>
+      {[
+        { id: "dashboard", label: "Dashboard" },
+        { id: "worldmonitor", label: "World Monitor" },
+      ].map((opt) => (
+        <button
+          key={opt.id}
+          onClick={() => switchMode(opt.id)}
+          disabled={loading}
+          style={{
+            flex: 1,
+            padding: "10px 0",
+            borderRadius: 10,
+            border: mode === opt.id
+              ? "1px solid rgba(100, 180, 255, 0.3)"
+              : "1px solid var(--color-glass-border)",
+            background: mode === opt.id
+              ? "rgba(100, 180, 255, 0.1)"
+              : "var(--color-surface-0)",
+            color: mode === opt.id
+              ? "rgba(100, 180, 255, 1)"
+              : "var(--color-t-muted)",
+            fontSize: 12,
+            fontWeight: 600,
+            cursor: loading ? "wait" : "pointer",
+            transition: "all 0.2s ease",
+            letterSpacing: "0.02em",
+          }}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function DashboardPage() {
-  const { connected, layout, url } = useDashboard();
+  const { connected, layout, url, password } = useDashboard();
   const [isEditing, setIsEditing] = useState(false);
 
   return (
@@ -76,6 +152,9 @@ export default function DashboardPage() {
           {layout.length} widget{layout.length !== 1 ? "s" : ""} active
         </span>
       </div>
+
+      {/* TV mode switcher */}
+      <KioskModeSwitcher backendUrl={url} password={password} />
 
       {/* Preset selector */}
       <PresetSelector />
