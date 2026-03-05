@@ -14,6 +14,7 @@ export interface UseDashboardWSReturn {
   connected: boolean;
   layout: WidgetPlacement[];
   activePreset: string;
+  kioskMode: string;
   send: (msg: Record<string, unknown>) => void;
 }
 
@@ -22,6 +23,7 @@ export function useDashboardWS(backendUrl: string, password?: string): UseDashbo
   const [connected, setConnected] = useState(false);
   const [layout, setLayout] = useState<WidgetPlacement[]>([]);
   const [activePreset, setActivePreset] = useState("default");
+  const [kioskMode, setKioskMode] = useState("dashboard");
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectDelay = useRef(1000);
@@ -57,6 +59,9 @@ export function useDashboardWS(backendUrl: string, password?: string): UseDashbo
           } else if (msg.topic === "config") {
             const d = msg.data as { mapkit_token?: string };
             if (d.mapkit_token) setMapKitToken(d.mapkit_token);
+          } else if (msg.topic === "kiosk_mode") {
+            const d = msg.data as { mode: string };
+            if (d.mode) setKioskMode(d.mode);
           } else if (msg.topic && msg.data !== undefined) {
             setData((prev) => ({ ...prev, [msg.topic]: msg.data }));
           }
@@ -101,5 +106,5 @@ export function useDashboardWS(backendUrl: string, password?: string): UseDashbo
     }
   }, []);
 
-  return { data, connected, layout, activePreset, send };
+  return { data, connected, layout, activePreset, kioskMode, send };
 }

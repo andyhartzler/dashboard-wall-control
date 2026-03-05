@@ -16,6 +16,8 @@ interface DashboardContextType {
   setUrl: (url: string) => void;
   layout: WidgetPlacement[];
   activePreset: string;
+  kioskMode: string;
+  setKioskMode: (mode: string) => void;
   send: (msg: Record<string, unknown>) => void;
   saveLayout: (presetName: string, name: string, widgets: WidgetPlacement[]) => Promise<void>;
   switchPreset: (presetName: string) => Promise<void>;
@@ -29,6 +31,8 @@ const DashboardContext = createContext<DashboardContextType>({
   setUrl: () => {},
   layout: [],
   activePreset: "default",
+  kioskMode: "dashboard",
+  setKioskMode: () => {},
   send: () => {},
   saveLayout: async () => {},
   switchPreset: async () => {},
@@ -92,7 +96,10 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     setBackendUrl(cleaned);
   };
 
-  const { data, connected, layout, activePreset, send } = useDashboardWS(backendUrl, PASSWORD);
+  const { data, connected, layout, activePreset, kioskMode: wsKioskMode, send } = useDashboardWS(backendUrl, PASSWORD);
+  const [kioskModeOverride, setKioskModeOverride] = useState<string | null>(null);
+  const kioskMode = kioskModeOverride ?? wsKioskMode;
+  const setKioskMode = (mode: string) => setKioskModeOverride(mode);
 
   const authHeaders = useCallback((): HeadersInit => ({
     "Content-Type": "application/json",
@@ -126,8 +133,9 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     <DashboardContext.Provider
       value={{
         data, connected, url: backendUrl, password: PASSWORD,
-        setUrl: handleSetUrl, layout, activePreset, send,
-        saveLayout, switchPreset,
+        setUrl: handleSetUrl, layout, activePreset,
+        kioskMode, setKioskMode,
+        send, saveLayout, switchPreset,
       }}
     >
       <main>{children}</main>
